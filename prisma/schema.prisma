@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  username      String    @unique
+  name          String?
+  passwordHash  String
+  betSides      Side[]
+}
+
+model Bet {
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  amount        Decimal
+  description   String
+  sides         Side[]    @relation("BetSides")
+  winnerId      String?   @unique
+  winner        Side?     @relation("Winner", fields: [winnerId], references: [id], onDelete: Cascade)
+}
+
+model Side {
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  name          String
+  odds          Decimal
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  accepted      Boolean   @default(false)
+  betId         String
+  bet           Bet       @relation("BetSides", fields: [betId], references: [id])
+  wonBet        Bet?      @relation("Winner")
+}

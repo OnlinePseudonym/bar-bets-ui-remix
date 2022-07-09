@@ -62,7 +62,7 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: { error: Error }) {
-  console.log(error);
+  console.error(error);
 
   return (
     <Document title="Uh-oh!">
