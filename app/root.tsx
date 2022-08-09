@@ -8,14 +8,14 @@ import {
   ScrollRestoration,
   useCatch,
 } from "@remix-run/react";
-import styles from "./styles/app.css"
-import globalStyles from "./styles/global.css"
+import styles from "./styles/app.css";
+import globalStyles from "./styles/global.css";
 
 export function links() {
   return [
     { rel: "stylesheet", href: styles },
-    { rel: "stylesheet", href: globalStyles }
-  ]
+    { rel: "stylesheet", href: globalStyles },
+  ];
 }
 
 export const meta: MetaFunction = () => {
@@ -27,7 +27,7 @@ export const meta: MetaFunction = () => {
     description,
     viewport: "width=device-width,initial-scale=1",
   };
-}
+};
 
 function Document({
   children,
@@ -43,7 +43,7 @@ function Document({
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="bg-zinc-200">
         {children}
         <ScrollRestoration />
         <Scripts />

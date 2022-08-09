@@ -1,7 +1,12 @@
+body {
+  min-height: 100vh;
+  min-height: calc(100vh - env(safe-area-inset-bottom));
+}
 
-.container {
-  width: 1024px;
-  max-width: calc(100% - 32px);
-  margin-right: auto;
-  margin-left: auto;
+.foobar {
+  border: 1px solid red;
+}
+
+.form-validation-error {
+  @apply text-red-500;
 }
