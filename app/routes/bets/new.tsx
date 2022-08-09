@@ -11,6 +11,7 @@ import {
 import { getUserId, requireUserId } from "~/utils/session.server";
 import { db } from "~/utils/db.server";
 import { useState } from "react";
+import FormField, { FieldTypes } from "~/components/form/FormField";
 //import { JokeDisplay } from "~/components/joke";
 
 function validateBetDescription(content: string) {
@@ -26,6 +27,13 @@ function validateBetAmount(content: string) {
   }
   if (amount <= 0) {
     return "Bet amount must be greater than $0";
+  }
+}
+
+function validateOdds(content: string) {
+  const odds = parseInt(content);
+  if (isNaN(odds)) {
+    return "Odds must be a valid whole number";
   }
 }
 
@@ -45,10 +53,12 @@ interface ActionData {
     amount: string | undefined;
     description: string | undefined;
     proposedId: string | undefined;
+    odds: string | undefined;
   };
   fields?: {
     proposedId: string;
     amount: string;
+    odds: string;
     description: string;
   };
 }
@@ -83,11 +93,13 @@ export const action: ActionFunction = async ({ request }) => {
   const proposedId = form.get("userId");
   const amount = form.get("amount");
   const description = form.get("description");
+  const odds = form.get("odds");
 
   if (
     typeof amount !== "string" ||
     typeof description !== "string" ||
-    typeof proposedId !== "string"
+    typeof proposedId !== "string" ||
+    typeof odds !== "string"
   ) {
     return badRequest({ formError: "Form not submitted correctly." });
   }
@@ -96,9 +108,10 @@ export const action: ActionFunction = async ({ request }) => {
     amount: validateBetAmount(amount),
     description: validateBetDescription(description),
     proposedId: validateProposedId(proposedId),
+    odds: validateOdds(odds)
   };
 
-  const fields = { amount, description, proposedId };
+  const fields = { amount, description, proposedId, odds };
   if (Object.values(fieldErrors).some(Boolean)) {
     return badRequest({ fieldErrors, fields });
   }
@@ -141,125 +154,36 @@ export default function NewJokeRoute() {
       <p>Propose a bet</p>
       <Form method="post">
         <div>
-          <div>
-            <div className="mb-4">
-              <label className="block text-sm font-bold mb-2" htmlFor="name">
-                Description:
-              </label>
-              <textarea
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
-                name="content"
-                defaultValue={actionData?.fields?.description}
-                aria-invalid={
-                  Boolean(actionData?.fieldErrors?.description) || undefined
-                }
-                aria-errormessage={
-                  actionData?.fieldErrors?.description
-                    ? "description-error"
-                    : undefined
-                }
-              />
-              {actionData?.fieldErrors?.description && (
-                <p
-                  className="form-validation-error"
-                  role="alert"
-                  id="description-error"
-                >
-                  {actionData.fieldErrors.description}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="mb-4">
-            <label
-              className="block text-sm font-bold mb-2"
-              htmlFor="proposedId"
-            >
-              Propose To:
-            </label>
-            <select
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
-              name="proposedId"
-              defaultValue={actionData?.fields?.proposedId}
-              aria-invalid={
-                Boolean(actionData?.fieldErrors?.proposedId) || undefined
-              }
-              aria-errormessage={
-                actionData?.fieldErrors?.proposedId
-                  ? "proposedId-error"
-                  : undefined
-              }
-              multiple
-            >
-              <option value="" disabled>
-                Select a user
-              </option>
-              {users.map((user) => (
-                <option value={user.id}>{user.username}</option>
-              ))}
-            </select>
-            {actionData?.fieldErrors?.proposedId && (
-              <p
-                className="form-validation-error"
-                role="alert"
-                id="proposedId-error"
-              >
-                {actionData.fieldErrors.proposedId}
-              </p>
-            )}
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-bold mb-2" htmlFor="name">
-              Bet Amount:
-            </label>
-            <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
-              type="number"
-              name="name"
-              defaultValue={actionData?.fields?.amount}
-              aria-invalid={
-                Boolean(actionData?.fieldErrors?.amount) || undefined
-              }
-              aria-errormessage={
-                actionData?.fieldErrors?.amount ? "amount-error" : undefined
-              }
-            />
-            {actionData?.fieldErrors?.amount && (
-              <p
-                className="form-validation-error"
-                role="alert"
-                id="amount-error"
-              >
-                {actionData.fieldErrors.amount}
-              </p>
-            )}
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-bold mb-2" htmlFor="name">
-              Odds:
-            </label>
-            <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
-              type="number"
-              name="name"
-              defaultValue={actionData?.fields?.amount}
-              aria-invalid={
-                Boolean(actionData?.fieldErrors?.amount) || undefined
-              }
-              aria-errormessage={
-                actionData?.fieldErrors?.amount ? "amount-error" : undefined
-              }
-            />
-            {actionData?.fieldErrors?.amount && (
-              <p
-                className="form-validation-error"
-                role="alert"
-                id="amount-error"
-              >
-                {actionData.fieldErrors.amount}
-              </p>
-            )}
-          </div>
+          <FormField
+            defaultValue={actionData?.fields?.description}
+            errorMessage={actionData?.fieldErrors?.description}
+            label="Description:"
+            name="description"
+            type={FieldTypes.TextArea}            
+          />
+          <FormField
+            defaultValue={actionData?.fields?.proposedId}
+            errorMessage={actionData?.fieldErrors?.proposedId}
+            label="Propose To:"
+            name="proposedId"
+            type={FieldTypes.Select}
+            disabledOption="Select a user"
+            options={users.map(user => ({ value: user.id, label: user.username}))}            
+          />
+          <FormField
+            defaultValue={actionData?.fields?.amount}
+            errorMessage={actionData?.fieldErrors?.amount}
+            label="Bet Amount:"
+            name="amount"
+            type={FieldTypes.Number}
+          />
+          <FormField
+            defaultValue={actionData?.fields?.odds}
+            errorMessage={actionData?.fieldErrors?.odds}
+            label="Odds:"
+            name="odds"
+            type={FieldTypes.Number}
+          />
         </div>
         <div>
           {actionData?.formError && (
