@@ -18,6 +18,7 @@ model User {
   name          String?
   passwordHash  String
   betSides      Side[]
+  bets          Bet[]     @relation("Owner")
 }
 
 model Bet {
@@ -26,6 +27,8 @@ model Bet {
   updatedAt     DateTime  @updatedAt
   amount        Decimal
   description   String
+  owner         User      @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId       String
   sides         Side[]    @relation("BetSides")
   winnerId      String?   @unique
   winner        Side?     @relation("Winner", fields: [winnerId], references: [id], onDelete: Cascade)

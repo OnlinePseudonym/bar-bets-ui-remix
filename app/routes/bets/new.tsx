@@ -12,6 +12,7 @@ import { getUserId, requireUserId } from "~/utils/session.server";
 import { db } from "~/utils/db.server";
 import { useState } from "react";
 import FormField, { FieldTypes } from "~/components/form/FormField";
+import { debug } from "~/utils/debug";
 //import { JokeDisplay } from "~/components/joke";
 
 function validateBetDescription(content: string) {
@@ -69,6 +70,7 @@ const badRequest = (data: ActionData) => {
 
 export const loader: LoaderFunction = async ({ request }) => {
   const userId = await getUserId(request);
+  console.log(userId);
   if (!userId) {
     throw new Response("Unauthorized", { status: 401 });
   }
@@ -90,10 +92,12 @@ export const loader: LoaderFunction = async ({ request }) => {
 export const action: ActionFunction = async ({ request }) => {
   const userId = await requireUserId(request);
   const form = await request.formData();
-  const proposedId = form.get("userId");
+  const proposedId = form.get("proposedId");
   const amount = form.get("amount");
   const description = form.get("description");
   const odds = form.get("odds");
+
+  debug();
 
   if (
     typeof amount !== "string" ||
@@ -108,7 +112,7 @@ export const action: ActionFunction = async ({ request }) => {
     amount: validateBetAmount(amount),
     description: validateBetDescription(description),
     proposedId: validateProposedId(proposedId),
-    odds: validateOdds(odds)
+    odds: validateOdds(odds),
   };
 
   const fields = { amount, description, proposedId, odds };
@@ -116,11 +120,34 @@ export const action: ActionFunction = async ({ request }) => {
     return badRequest({ fieldErrors, fields });
   }
 
-  // const joke = await db.bet.create({
-  //   data: { ...fields, jokesterId: userId },
-  // });
+  const bet = await db.bet.create({
+    data: {
+      amount: fields.amount,
+      description: fields.description,
+      sides: {
+        create: [
+          {
+            user: {
+              connect: { id: fields.proposedId },
+            },
+            odds: fields.odds,
+            name: "some side",
+            accepted: false,
+          },
+          {
+            user: {
+              connect: { id: userId },
+            },
+            odds: -fields.odds,
+            name: "some side",
+            accepted: false,
+          },
+        ],
+      },
+    },
+  });
 
-  return redirect(`/new`);
+  return redirect(`/bets/${bet.id}`);
 };
 
 export default function NewJokeRoute() {
@@ -159,7 +186,7 @@ export default function NewJokeRoute() {
             errorMessage={actionData?.fieldErrors?.description}
             label="Description:"
             name="description"
-            type={FieldTypes.TextArea}            
+            type={FieldTypes.TextArea}
           />
           <FormField
             defaultValue={actionData?.fields?.proposedId}
@@ -168,7 +195,10 @@ export default function NewJokeRoute() {
             name="proposedId"
             type={FieldTypes.Select}
             disabledOption="Select a user"
-            options={users.map(user => ({ value: user.id, label: user.username}))}            
+            options={users.map((user) => ({
+              value: user.id,
+              label: user.username,
+            }))}
           />
           <FormField
             defaultValue={actionData?.fields?.amount}
