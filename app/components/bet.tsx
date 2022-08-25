@@ -22,6 +22,10 @@ interface BetProps {
 }
 
 export function BetDisplay({ bet, isOwner, canDelete }: BetProps) {
+  const disableDelete = !canDelete || bet.sides.every(x => x.accepted);
+  console.log(isOwner);
+
+  console.log(disableDelete);
   return (
     <div>
       <p>Here's your bet:</p>
@@ -50,7 +54,7 @@ export function BetDisplay({ bet, isOwner, canDelete }: BetProps) {
       {isOwner && (
         <Form method="post">
           <input type="hidden" name="_method" value="delete" />
-          <button type="submit" className="button" disabled={!canDelete}>
+          <button type="submit" className="button" disabled={disableDelete}>
             Delete
           </button>
         </Form>

@@ -70,7 +70,7 @@ const badRequest = (data: ActionData) => {
 
 export const loader: LoaderFunction = async ({ request }) => {
   const userId = await getUserId(request);
-  console.log(userId);
+
   if (!userId) {
     throw new Response("Unauthorized", { status: 401 });
   }
@@ -124,6 +124,9 @@ export const action: ActionFunction = async ({ request }) => {
     data: {
       amount: fields.amount,
       description: fields.description,
+      owner: {
+        connect: { id: userId}
+      },
       sides: {
         create: [
           {
@@ -153,7 +156,6 @@ export const action: ActionFunction = async ({ request }) => {
 export default function NewJokeRoute() {
   const actionData = useActionData<ActionData>();
   const { users } = useLoaderData<LoaderData>();
-  console.log(users);
   // const transition = useTransition();
 
   // if (transition.submission) {

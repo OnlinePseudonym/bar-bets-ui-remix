@@ -27,11 +27,11 @@ model Bet {
   updatedAt     DateTime  @updatedAt
   amount        Decimal
   description   String
-  owner         User      @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  owner         User      @relation("Owner", fields: [ownerId], references: [id])
   ownerId       String
   sides         Side[]    @relation("BetSides")
   winnerId      String?   @unique
-  winner        Side?     @relation("Winner", fields: [winnerId], references: [id], onDelete: Cascade)
+  winner        Side?     @relation("Winner", fields: [winnerId], references: [id])
 }
 
 model Side {
@@ -40,10 +40,10 @@ model Side {
   updatedAt     DateTime  @updatedAt
   name          String
   odds          Decimal
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id])
   userId        String
   accepted      Boolean   @default(false)
   betId         String
-  bet           Bet       @relation("BetSides", fields: [betId], references: [id])
+  bet           Bet       @relation("BetSides", fields: [betId], references: [id], onDelete: Cascade)
   wonBet        Bet?      @relation("Winner")
 }
